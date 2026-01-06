@@ -48,9 +48,9 @@ svg {
 }
 
 .land.selected {
-	fill: #e5e7eb;
-	stroke: #d1d5db;
-	stroke-width: 3px;
+	fill: #fbbf24;
+	stroke: none;
+	stroke-width: 0;
 }
 
 /* Country interaction areas */
