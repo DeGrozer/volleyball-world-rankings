@@ -6,7 +6,7 @@ An interactive 3D globe visualization of the official FIVB (Fédération Interna
 
 **[View Live →](https://degrozer.github.io/volleyball-world-rankings/)**
 
-## ✨ Features
+## Features
 
 - **Interactive 3D Globe** - Rotate and explore countries worldwide using D3.js orthographic projection
 - **Live FIVB Data** - Real-time rankings fetched directly from the official Volleyball World API
@@ -15,14 +15,14 @@ An interactive 3D globe visualization of the official FIVB (Fédération Interna
 - **Zoom Controls** - Zoom in/out to explore regions in detail
 - **Responsive Design** - Works on desktop and mobile devices
 
-## 📊 Data Source
+## Data Source
 
 Rankings are fetched live from the official **[Volleyball World](https://en.volleyballworld.com/)** API:
 - Updates automatically with the latest FIVB rankings
 - Includes 100+ national teams for both men's and women's volleyball
 - Shows rank position and decimal points
 
-## 🛠️ Technologies
+## Technologies
 
 - **D3.js v7** - Globe rendering and geographic projections
 - **TopoJSON** - Efficient world map data
@@ -30,7 +30,7 @@ Rankings are fetched live from the official **[Volleyball World](https://en.voll
 - **Vanilla JavaScript** - No framework dependencies
 - **GitHub Pages** - Free hosting
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 ├── index.html          # Main HTML file
@@ -47,7 +47,7 @@ Rankings are fetched live from the official **[Volleyball World](https://en.voll
 └── world-110m.json     # TopoJSON world map
 ```
 
-## 🚀 Getting Started
+## Getting Started
 
 1. Clone the repository:
    ```bash
@@ -61,17 +61,17 @@ Rankings are fetched live from the official **[Volleyball World](https://en.voll
 
 3. That's it! No build process or dependencies required.
 
-## 📝 Notes
+## Notes
 
 - Some countries may show "No ranking data available" if they don't participate in FIVB competitions
 - Rankings are cached for 1 hour to reduce API calls
 - Country names are normalized to match between the map data and FIVB federation names
 
-## 👤 Author
+## Author
 
 **Jan Andrew R. Barte**
 
-## 📄 License
+## License
 
 This project is for educational and personal use. Ranking data is sourced from FIVB/Volleyball World.
 
