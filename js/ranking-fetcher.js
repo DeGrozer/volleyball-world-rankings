@@ -148,13 +148,22 @@ const RankingFetcher = (function() {
 		// Normalize country name for matching
 		const normalizedInput = normalizeCountryName(countryName);
 		
-		// Search with flexible matching
-		const ranking = rankings.find(r => {
+		// First try exact match
+		let ranking = rankings.find(r => {
 			const normalizedFed = normalizeCountryName(r.federationName);
-			return normalizedFed === normalizedInput || 
-			       r.federationName.toLowerCase().includes(normalizedInput) ||
-			       normalizedInput.includes(normalizedFed.toLowerCase());
+			return normalizedFed === normalizedInput;
 		});
+		
+		// If no exact match, try word-boundary matching (avoid "oman" in "romania")
+		if (!ranking) {
+			ranking = rankings.find(r => {
+				const normalizedFed = normalizeCountryName(r.federationName);
+				// Only match if it's a complete word, not a substring
+				const inputWords = normalizedInput.split(/\s+/);
+				const fedWords = normalizedFed.split(/\s+/);
+				return inputWords.some(w => fedWords.includes(w) && w.length > 3);
+			});
+		}
 		
 		return ranking || null;
 	}
