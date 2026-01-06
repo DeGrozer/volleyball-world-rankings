@@ -172,15 +172,21 @@ const RankingFetcher = (function() {
 			'usa': 'united states',
 			'u.s.a.': 'united states',
 			'russian federation': 'russia',
+			// South Korea
 			'republic of korea': 'korea',
 			'south korea': 'korea',
+			'korea, republic of': 'korea',
+			// North Korea
+			'north korea': 'dpr korea',
+			"korea, democratic people's republic of": 'dpr korea',
+			'democratic peoples republic of korea': 'dpr korea',
+			// Others
 			'democratic republic of the congo': 'democratic republic of congo',
 			'republic of the congo': 'congo',
 			'united kingdom': 'great britain',
 			'england': 'great britain',
 			'czech republic': 'czechia',
 			'ivory coast': "côte d'ivoire",
-			'north korea': "korea, democratic people's republic of",
 			'vietnam': 'viet nam',
 			'taiwan': 'chinese taipei',
 			'holland': 'netherlands',

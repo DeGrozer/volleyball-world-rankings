@@ -438,3 +438,25 @@ svg {
 		font-size: 14px;
 	}
 }
+
+/* Gender Toggle Buttons */
+.gender-btn {
+	padding: 10px 24px;
+	font-weight: 600;
+	font-size: 14px;
+	border-radius: 8px;
+	border: 2px solid transparent;
+	transition: all 0.3s ease;
+	cursor: pointer;
+	color: white;
+}
+
+.gender-btn:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.gender-btn.active {
+	border-color: white;
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}

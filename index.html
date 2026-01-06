@@ -29,10 +29,17 @@
 	</script>
 	<link rel="stylesheet" href="css/style.css">
 </head>
-<body class="men h-screen m-0 p-0 font-sans antialiased transition-colors duration-600 ease-out">
-	<!-- Gender Toggle -->
-	<div class="fixed top-8 left-8 z-[100]">
-		<button id="toggleGender" class="bg-white/90 hover:bg-white border border-gray-300 text-gray-800 px-6 py-3 rounded-lg text-sm font-semibold cursor-pointer transition-all duration-300 shadow-lg hover:shadow-xl">Switch to Men's</button>
+<body class="women h-screen m-0 p-0 font-sans antialiased transition-colors duration-600 ease-out">
+	<!-- Header Title -->
+	<div class="fixed top-6 left-1/2 transform -translate-x-1/2 z-[100] text-center">
+		<h1 class="text-white text-2xl font-bold tracking-wide">Senior Volleyball World Ranking</h1>
+		<p id="rankingDate" class="text-gray-400 text-sm mt-1">as of January 6, 2026</p>
+	</div>
+	
+	<!-- Gender Toggle - Upper Right -->
+	<div class="fixed top-6 right-8 z-[100] flex gap-2">
+		<button id="btnWomen" class="gender-btn active bg-pink-600 hover:bg-pink-700 text-white px-5 py-2 rounded-lg text-sm font-semibold cursor-pointer transition-all duration-300 shadow-lg">Women</button>
+		<button id="btnMen" class="gender-btn bg-gray-600 hover:bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-semibold cursor-pointer transition-all duration-300 shadow-lg">Men</button>
 	</div>
 	
 	<!-- Zoom Controls -->

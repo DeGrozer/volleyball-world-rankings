@@ -185,24 +185,71 @@
 	}
 	
 	/**
-	 * Setup gender toggle button
+	 * Setup gender toggle buttons
 	 */
 	function setupGenderToggle() {
-		const toggleBtn = document.getElementById('toggleGender');
-		if (!toggleBtn) return;
+		const btnWomen = document.getElementById('btnWomen');
+		const btnMen = document.getElementById('btnMen');
 		
-		toggleBtn.addEventListener('click', async () => {
-			// Toggle gender
-			currentGender = currentGender === 'women' ? 'men' : 'women';
-			
-			// Update button text and theme
-			toggleBtn.textContent = currentGender === 'women' ? "Switch to Men's" : "Switch to Women's";
-			document.body.className = currentGender;
-			
-			// Close any open card (rankings will be fetched on demand)
-			hideCountryCard();
-			GlobeRenderer.clearSelection();
+		if (!btnWomen || !btnMen) return;
+		
+		// Update date display
+		updateRankingDate();
+		
+		btnWomen.addEventListener('click', () => {
+			if (currentGender === 'women') return;
+			currentGender = 'women';
+			updateGenderUI();
 		});
+		
+		btnMen.addEventListener('click', () => {
+			if (currentGender === 'men') return;
+			currentGender = 'men';
+			updateGenderUI();
+		});
+	}
+	
+	/**
+	 * Update UI when gender changes
+	 */
+	function updateGenderUI() {
+		const btnWomen = document.getElementById('btnWomen');
+		const btnMen = document.getElementById('btnMen');
+		
+		// Update button styles
+		if (currentGender === 'women') {
+			btnWomen.classList.add('active', 'bg-pink-600');
+			btnWomen.classList.remove('bg-gray-600');
+			btnMen.classList.remove('active', 'bg-blue-600');
+			btnMen.classList.add('bg-gray-600');
+		} else {
+			btnMen.classList.add('active', 'bg-blue-600');
+			btnMen.classList.remove('bg-gray-600');
+			btnWomen.classList.remove('active', 'bg-pink-600');
+			btnWomen.classList.add('bg-gray-600');
+		}
+		
+		// Update body class for theme
+		document.body.className = document.body.className.replace(/women|men/, currentGender);
+		
+		// Close any open card
+		hideCountryCard();
+		GlobeRenderer.clearSelection();
+	}
+	
+	/**
+	 * Update ranking date in header
+	 */
+	function updateRankingDate() {
+		const dateEl = document.getElementById('rankingDate');
+		if (dateEl) {
+			const today = new Date().toLocaleDateString('en-US', {
+				year: 'numeric',
+				month: 'long',
+				day: 'numeric'
+			});
+			dateEl.textContent = `as of ${today}`;
+		}
 	}
 	
 	/**
