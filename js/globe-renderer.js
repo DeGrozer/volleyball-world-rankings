@@ -306,6 +306,25 @@ const GlobeRenderer = (function() {
 	}
 	
 	/**
+	 * Select country by name (for leaderboard integration)
+	 */
+	function selectCountryByName(countryName) {
+		const normalizedName = countryName.toLowerCase().trim();
+		
+		// Find the country feature by name
+		const feature = countries.find(c => {
+			const name = (c.properties?.name || '').toLowerCase();
+			return name === normalizedName || name.includes(normalizedName) || normalizedName.includes(name);
+		});
+		
+		if (feature) {
+			handleCountryClick(feature);
+		} else {
+			console.warn('Country not found on globe:', countryName);
+		}
+	}
+	
+	/**
 	 * Render/update globe
 	 */
 	function render() {
@@ -383,6 +402,7 @@ const GlobeRenderer = (function() {
 	return {
 		init,
 		clearSelection,
+		selectCountryByName,
 		zoomIn,
 		zoomOut
 	};

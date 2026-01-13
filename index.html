@@ -39,6 +39,9 @@
 	
 	<!-- Gender Toggle - Upper Right -->
 	<div class="fixed top-6 right-8 z-[100] flex gap-2">
+		<button id="btnLeaderboard" class="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all duration-200 border border-white/20 backdrop-blur-sm">
+			Rankings
+		</button>
 		<button id="btnWomen" class="gender-btn active bg-pink-600 hover:bg-pink-700 text-white px-5 py-2 rounded-lg text-sm font-semibold cursor-pointer transition-all duration-300 shadow-lg">Women</button>
 		<button id="btnMen" class="gender-btn bg-gray-600 hover:bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-semibold cursor-pointer transition-all duration-300 shadow-lg">Men</button>
 	</div>
@@ -71,6 +74,18 @@
 		<div class="card-body p-4"></div>
 	</div>
 	
+	<!-- Leaderboard Modal -->
+	<div id="leaderboardModal" class="fixed inset-0 bg-black/50 z-[200] opacity-0 pointer-events-none transition-opacity duration-200 flex items-center justify-center">
+		<div class="bg-gray-900 rounded-xl shadow-2xl w-[400px] max-h-[70vh] overflow-hidden border border-gray-700/50">
+			<div class="flex items-center justify-between px-5 py-4 border-b border-gray-700/50">
+				<h2 id="leaderboardTitle" class="text-base font-semibold text-white">World Rankings</h2>
+				<button id="closeLeaderboard" class="text-gray-400 hover:text-white text-xl leading-none w-6 h-6 flex items-center justify-center rounded hover:bg-gray-700/50 transition-colors">&times;</button>
+			</div>
+			<div id="leaderboardContent" class="overflow-y-auto max-h-[calc(70vh-56px)]">
+				<div class="text-center text-gray-500 py-8 text-sm">Loading...</div>
+			</div>
+		</div>
+	</div>
 
 	
 	<!-- Globe Container -->

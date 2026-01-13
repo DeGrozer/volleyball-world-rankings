@@ -165,6 +165,7 @@
 			setupZoomControls();
 			setupCardClose();
 			setupSparklineHover();
+			setupLeaderboard();
 			
 			// Setup country selection callback
 			window.onCountrySelected = handleCountrySelection;
@@ -309,6 +310,123 @@
 				hideCountryCard();
 				GlobeRenderer.clearSelection();
 			});
+		}
+	}
+	
+	/**
+	 * Setup leaderboard modal
+	 */
+	function setupLeaderboard() {
+		const btnLeaderboard = document.getElementById('btnLeaderboard');
+		const closeLeaderboard = document.getElementById('closeLeaderboard');
+		const modal = document.getElementById('leaderboardModal');
+		
+		if (btnLeaderboard) {
+			btnLeaderboard.addEventListener('click', () => {
+				showLeaderboard();
+			});
+		}
+		
+		if (closeLeaderboard) {
+			closeLeaderboard.addEventListener('click', () => {
+				hideLeaderboard();
+			});
+		}
+		
+		// Close on backdrop click
+		if (modal) {
+			modal.addEventListener('click', (e) => {
+				if (e.target === modal) {
+					hideLeaderboard();
+				}
+			});
+		}
+	}
+	
+	/**
+	 * Show leaderboard modal with rankings
+	 */
+	async function showLeaderboard() {
+		const modal = document.getElementById('leaderboardModal');
+		const content = document.getElementById('leaderboardContent');
+		const title = document.getElementById('leaderboardTitle');
+		
+		if (!modal || !content) return;
+		
+		// Update title based on gender
+		if (title) {
+			title.textContent = currentGender === 'women' ? "Women's World Rankings" : "Men's World Rankings";
+		}
+		
+		// Show modal
+		modal.classList.remove('opacity-0', 'pointer-events-none');
+		
+		// Show loading state
+		content.innerHTML = '<div class="text-center text-gray-500 py-8 text-sm">Loading...</div>';
+		
+		try {
+			// Fetch all rankings
+			const rankings = await RankingFetcher.getAllRankings(currentGender);
+			
+			if (!rankings || rankings.length === 0) {
+				content.innerHTML = '<div class="text-center text-gray-500 py-8 text-sm">No rankings available</div>';
+				return;
+			}
+			
+			// Generate leaderboard HTML - clean dark theme
+			const html = rankings.map((team, index) => {
+				const rank = team.rank || index + 1;
+				const flagUrl = `https://flagcdn.com/w40/${(team.teamCode || '').toLowerCase()}.png`;
+				const points = team.wrs?.toFixed(2) || '—';
+				
+				// Subtle highlight for top 3
+				let rowBg = 'hover:bg-gray-800/50';
+				let rankColor = 'text-gray-500';
+				if (rank === 1) {
+					rankColor = 'text-amber-400';
+				} else if (rank === 2) {
+					rankColor = 'text-gray-300';
+				} else if (rank === 3) {
+					rankColor = 'text-amber-600';
+				}
+				
+				return `
+					<div class="flex items-center gap-3 px-5 py-3 ${rowBg} cursor-pointer leaderboard-item border-b border-gray-800/50 last:border-0" data-country="${team.teamName || ''}">
+						<span class="w-6 text-right text-sm font-medium ${rankColor}">${rank}</span>
+						<img src="${flagUrl}" alt="" class="w-7 h-5 object-cover shrink-0" onerror="this.style.visibility='hidden'">
+						<span class="flex-1 text-sm text-gray-200 truncate">${team.teamName || 'Unknown'}</span>
+						<span class="text-sm text-gray-400 tabular-nums">${points}</span>
+					</div>
+				`;
+			}).join('');
+			
+			content.innerHTML = html;
+			
+			// Add click handlers to navigate to country
+			content.querySelectorAll('.leaderboard-item').forEach(item => {
+				item.addEventListener('click', () => {
+					const countryName = item.getAttribute('data-country');
+					hideLeaderboard();
+					// Trigger country selection on globe
+					if (countryName) {
+						GlobeRenderer.selectCountryByName(countryName);
+					}
+				});
+			});
+			
+		} catch (error) {
+			console.error('Failed to load leaderboard:', error);
+			content.innerHTML = '<div class="text-center text-red-400 py-8 text-sm">Failed to load rankings</div>';
+		}
+	}
+	
+	/**
+	 * Hide leaderboard modal
+	 */
+	function hideLeaderboard() {
+		const modal = document.getElementById('leaderboardModal');
+		if (modal) {
+			modal.classList.add('opacity-0', 'pointer-events-none');
 		}
 	}
 	
@@ -488,6 +606,33 @@
 				<div class="sparkline-tooltip hidden absolute bg-gray-900 text-white text-xs px-2 py-1 rounded shadow-lg z-50 whitespace-nowrap" style="pointer-events: none;"></div>
 			</div>
 		`;
+	}
+	
+	/**
+	 * Calculate current win/loss streak
+	 * @param {Array} progression - Match history array
+	 * @returns {Object} {type: 'W'|'L'|null, count: number}
+	 */
+	function calculateStreak(progression) {
+		if (!progression || progression.length === 0) {
+			return { type: null, count: 0 };
+		}
+		
+		// Get matches in reverse order (most recent first)
+		const matches = [...progression].reverse();
+		
+		let streakType = matches[0].result;
+		let count = 0;
+		
+		for (const match of matches) {
+			if (match.result === streakType) {
+				count++;
+			} else {
+				break;
+			}
+		}
+		
+		return { type: streakType, count };
 	}
 
 	/**

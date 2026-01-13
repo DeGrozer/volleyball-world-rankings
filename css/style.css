@@ -12,6 +12,31 @@ body.women {
 	background: #2a1a1f;
 }
 
+/* Custom Scrollbar - Dark Theme */
+::-webkit-scrollbar {
+	width: 6px;
+	height: 6px;
+}
+
+::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+	background: #4b5563;
+	border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+	background: #6b7280;
+}
+
+/* Firefox scrollbar */
+* {
+	scrollbar-width: thin;
+	scrollbar-color: #4b5563 transparent;
+}
+
 /* SVG Container */
 svg {
 	width: min(960px, 95vw);

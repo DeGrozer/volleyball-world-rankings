@@ -167,14 +167,18 @@ const RankingFetcher = (function() {
 			return normalizedFed === normalizedInput;
 		});
 		
-		// If no exact match, try word-boundary matching (avoid "oman" in "romania")
+		// If no exact match, try matching first significant word (but be strict)
 		if (!ranking) {
 			ranking = rankings.find(r => {
 				const normalizedFed = normalizeCountryName(r.federationName);
-				// Only match if it's a complete word, not a substring
-				const inputWords = normalizedInput.split(/\s+/);
-				const fedWords = normalizedFed.split(/\s+/);
-				return inputWords.some(w => fedWords.includes(w) && w.length > 3);
+				// Exact word match only - input must equal federation name or be a full word within it
+				// Avoid partial matches like "oman" in "romania"
+				if (normalizedFed === normalizedInput) return true;
+				// Check if it's a whole word match at start
+				if (normalizedFed.startsWith(normalizedInput + ' ') || normalizedFed.endsWith(' ' + normalizedInput)) {
+					return true;
+				}
+				return false;
 			});
 		}
 		
@@ -194,14 +198,17 @@ const RankingFetcher = (function() {
 			'usa': 'united states',
 			'u.s.a.': 'united states',
 			'russian federation': 'russia',
-			// South Korea
+			// South Korea - FIVB uses "Korea"
 			'republic of korea': 'korea',
 			'south korea': 'korea',
 			'korea, republic of': 'korea',
-			// North Korea
+			's. korea': 'korea',
+			// North Korea - FIVB uses "DPR Korea"  
 			'north korea': 'dpr korea',
 			"korea, democratic people's republic of": 'dpr korea',
 			'democratic peoples republic of korea': 'dpr korea',
+			"dem. people's republic of korea": 'dpr korea',
+			'n. korea': 'dpr korea',
 			// Others
 			'democratic republic of the congo': 'democratic republic of congo',
 			'republic of the congo': 'congo',
@@ -215,7 +222,10 @@ const RankingFetcher = (function() {
 			'uae': 'united arab emirates',
 			'bosnia and herzegovina': 'bosnia and herzegovina',
 			'türkiye': 'turkey',
-			'turkiye': 'turkey'
+			'turkiye': 'turkey',
+			// Prevent false matches
+			'oman': 'oman',
+			'romania': 'romania'
 		};
 		
 		return nameMap[lowerName] || lowerName;
@@ -281,6 +291,71 @@ const RankingFetcher = (function() {
 	}
 	
 	/**
+	 * Get all rankings for leaderboard display
+	 * @async
+	 * @param {string} gender - 'men' or 'women'
+	 * @returns {Promise<Array>} All rankings with basic info
+	 */
+	async function getAllRankings(gender) {
+		const rankings = await fetchCurrentRankings(gender);
+		return rankings.map(r => ({
+			rank: r.rank,
+			teamName: r.federationName,
+			teamCode: r.countryCode || getCountryCode(r.federationName),
+			wrs: r.points
+		}));
+	}
+	
+	/**
+	 * Get country code from name (for flags)
+	 */
+	function getCountryCode(name) {
+		const codes = {
+			'united states': 'us',
+			'brazil': 'br',
+			'poland': 'pl',
+			'italy': 'it',
+			'japan': 'jp',
+			'china': 'cn',
+			'france': 'fr',
+			'germany': 'de',
+			'turkey': 'tr',
+			'serbia': 'rs',
+			'netherlands': 'nl',
+			'canada': 'ca',
+			'argentina': 'ar',
+			'dominican republic': 'do',
+			'thailand': 'th',
+			'south korea': 'kr',
+			'cuba': 'cu',
+			'puerto rico': 'pr',
+			'belgium': 'be',
+			'bulgaria': 'bg',
+			'czech republic': 'cz',
+			'slovenia': 'si',
+			'ukraine': 'ua',
+			'finland': 'fi',
+			'mexico': 'mx',
+			'kenya': 'ke',
+			'egypt': 'eg',
+			'cameroon': 'cm',
+			'tunisia': 'tn',
+			'iran': 'ir',
+			'australia': 'au',
+			'peru': 'pe',
+			'greece': 'gr',
+			'spain': 'es',
+			'portugal': 'pt',
+			'croatia': 'hr',
+			'sweden': 'se',
+			'norway': 'no',
+			'romania': 'ro',
+			'russia': 'ru'
+		};
+		return codes[name.toLowerCase()] || '';
+	}
+	
+	/**
 	 * Get top N rankings
 	 * @async
 	 * @param {number} limit - Number of top teams to return
@@ -340,6 +415,7 @@ const RankingFetcher = (function() {
 		fetchCurrentRankings,
 		getCountryRanking,
 		getTopRankings,
+		getAllRankings,
 		formatRankingDisplay,
 		clearCache,
 		getCachedRankings
