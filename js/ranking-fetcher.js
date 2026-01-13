@@ -103,24 +103,37 @@ const RankingFetcher = (function() {
 				
 				const data = await response.json();
 				
-				if (data.teams && data.teams.length > 0) {
-					allTeams.push(...data.teams);
+				// API returns array directly, or might have teams property
+				const teams = Array.isArray(data) ? data : (data.teams || data);
+				if (teams && teams.length > 0) {
+					allTeams.push(...teams);
 				}
 			}
 			
 			// Transform FIVB API data to our format
 			const rankings = allTeams
 				.filter(team => team.decimalPoints && team.decimalPoints !== '')
-				.map((team, index) => ({
-					rank: index + 1,
-					federationName: team.federationName,
-					countryName: team.federationName,
-					points: parseFloat(team.decimalPoints),
-					iso3: federationToIso3[team.federationName] || null,
-					participationPoints: team.participationPoints || 0,
-					gamesPlayed: team.gamesPlayed || 0,
-					updatedDate: new Date().toISOString()
-				}));
+				.map((team, index) => {
+					// Extract points progression from teamMatches
+					const pointsProgression = extractPointsProgression(team);
+					
+					return {
+						rank: index + 1,
+						federationName: team.federationName,
+						countryName: team.federationName,
+						points: parseFloat(team.decimalPoints),
+						iso3: federationToIso3[team.federationName] || null,
+						participationPoints: team.participationPoints || 0,
+						gamesPlayed: team.gamesPlayed || 0,
+						updatedDate: new Date().toISOString(),
+						// New: Points progression for sparkline
+						pointsProgression: pointsProgression,
+						confederationName: team.confederationName || '',
+						confederationCode: team.confederationCode || '',
+						trend: team.trend || 0,
+						flagUrl: team.flagUrl || ''
+					};
+				});
 			
 			// Cache the results
 			rankingsCache[gender] = rankings;
@@ -206,6 +219,65 @@ const RankingFetcher = (function() {
 		};
 		
 		return nameMap[lowerName] || lowerName;
+	}
+	
+	/**
+	 * Extract points progression from team matches for sparkline
+	 * @param {Object} team - Team data from API
+	 * @returns {Array} Array of {date, points, increment} objects (most recent 10 matches)
+	 */
+	function extractPointsProgression(team) {
+		if (!team.teamMatches || team.teamMatches.length === 0) {
+			return [];
+		}
+		
+		// Sort matches by date (oldest first for progression)
+		const sortedMatches = [...team.teamMatches]
+			.filter(match => {
+				// Only include matches where this team was active
+				return match.isHomeTeamActive || match.isAwayTeamActive;
+			})
+			.sort((a, b) => new Date(a.localDate) - new Date(b.localDate))
+			.slice(-12); // Take last 12 matches for a good sparkline
+		
+		// Build points progression
+		const progression = sortedMatches.map(match => {
+			// Determine which WRS (World Ranking Score) applies to this team
+			const isHome = match.isHomeTeamActive;
+			const wrs = isHome ? match.homeWRS : match.awayWRS;
+			const increment = match.increment || 0;
+			const opponent = isHome ? match.awayTeam : match.homeTeam;
+			
+			// Parse result (format: "3 - 0", "2 - 3", etc.)
+			let result = '-';
+			let score = '';
+			if (match.result) {
+				const scores = match.result.split('-').map(s => parseInt(s.trim()));
+				if (scores.length === 2) {
+					const homeScore = scores[0];
+					const awayScore = scores[1];
+					if (isHome) {
+						result = homeScore > awayScore ? 'W' : 'L';
+						score = `${homeScore}-${awayScore}`;
+					} else {
+						result = awayScore > homeScore ? 'W' : 'L';
+						score = `${awayScore}-${homeScore}`; // Show team's score first
+					}
+				}
+			}
+			
+			return {
+				date: match.localDate,
+				points: wrs,
+				increment: isHome ? increment : (increment * -1), // Flip sign for away team
+				event: match.eventName || '',
+				opponent: opponent,
+				result: result,
+				score: score
+			};
+		});
+		
+		return progression;
 	}
 	
 	/**

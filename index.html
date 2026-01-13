@@ -55,14 +55,20 @@
 	</div>
 	
 	<!-- Country Information Card -->
-	<div class="country-card fixed top-[200px] left-8 w-[340px] bg-white rounded-lg p-8 shadow-xl z-50 opacity-0 pointer-events-none transition-all duration-400 ease-out scale-90">
-		<button class="close-btn absolute top-3 right-3 bg-gray-100 border-0 text-gray-600 text-lg w-7 h-7 rounded-md cursor-pointer transition-all duration-200 flex items-center justify-center leading-none z-10 hover:bg-gray-200 hover:text-gray-800" aria-label="Close">&times;</button>
+	<div class="country-card fixed top-[100px] left-6 w-[320px] bg-white rounded-xl shadow-2xl z-50 opacity-0 pointer-events-none transition-all duration-400 ease-out scale-90 overflow-hidden">
+		<button class="close-btn absolute top-2 right-2 bg-gray-100 border-0 text-gray-600 text-base w-6 h-6 rounded-md cursor-pointer transition-all duration-200 flex items-center justify-center leading-none z-10 hover:bg-gray-200 hover:text-gray-800" aria-label="Close">&times;</button>
 		
-		<div class="text-center">
-			<img class="country-flag w-24 h-16 rounded object-cover shadow-md mx-auto mb-5 block border border-gray-200" alt="">
-			<h2 class="country-name m-0 text-2xl font-semibold text-gray-800 tracking-tight"></h2>
-			<p class="text-gray-500 text-sm mt-2 font-medium">Selected Country</p>
+		<!-- Header with flag and name -->
+		<div class="card-header flex items-center gap-3 p-4 border-b border-gray-100">
+			<img class="country-flag w-12 h-8 object-cover shadow-sm border border-gray-200 shrink-0" alt="">
+			<div class="min-w-0">
+				<h2 class="country-name m-0 text-base font-semibold text-gray-800 leading-tight truncate"></h2>
+				<p class="federation-name text-xs text-gray-500 mt-0.5 font-medium leading-tight"></p>
+			</div>
 		</div>
+		
+		<!-- Ranking stats -->
+		<div class="card-body p-4"></div>
 	</div>
 	
 

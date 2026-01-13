@@ -112,3 +112,56 @@ svg{ width:min(960px,95vw); height: min(640px,85vh); background:transparent; }
 
 #genderToggle:hover{ background: rgba(255, 255, 255, 0.25); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); }
 
+/* Sparkline Chart Styles */
+.sparkline-container {
+  width: 100%;
+  padding: 0;
+}
+
+.sparkline-svg {
+  width: 100%;
+  height: 60px;
+  border-radius: 8px;
+  overflow: visible;
+  display: block;
+}
+
+.sparkline-label {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-weight: 500;
+}
+
+/* Animate sparkline on load */
+.sparkline-svg path:not([fill]) {
+  stroke-dasharray: 500;
+  animation: drawLine 1.2s ease-out forwards;
+}
+
+@keyframes drawLine {
+  from {
+    stroke-dashoffset: 500;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.sparkline-svg circle {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: popIn 0.4s ease-out forwards;
+  animation-delay: 0.9s;
+}
+
+@keyframes popIn {
+  0% {
+    transform: scale(0);
+  }
+  70% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+

@@ -164,6 +164,7 @@
 			setupGenderToggle();
 			setupZoomControls();
 			setupCardClose();
+			setupSparklineHover();
 			
 			// Setup country selection callback
 			window.onCountrySelected = handleCountrySelection;
@@ -174,6 +175,52 @@
 			console.error('Initialization error:', error);
 			showError('Failed to load application. Please refresh the page.');
 		}
+	}
+	
+	/**
+	 * Setup sparkline hover interactions
+	 */
+	function setupSparklineHover() {
+		document.addEventListener('mouseover', (e) => {
+			if (e.target.classList.contains('sparkline-hover-dot')) {
+				const pts = e.target.getAttribute('data-pts');
+				const date = e.target.getAttribute('data-date');
+				const sparklineBox = e.target.closest('.relative');
+				const tooltip = sparklineBox?.querySelector('.sparkline-tooltip');
+				
+				if (tooltip) {
+					tooltip.textContent = `${pts} pts${date ? ' • ' + date : ''}`;
+					tooltip.classList.remove('hidden');
+					
+					const cx = parseFloat(e.target.getAttribute('cx'));
+					const cy = parseFloat(e.target.getAttribute('cy'));
+					
+					// Position tooltip, keep within card bounds
+					let leftPos = cx + 8;
+					if (leftPos > 180) leftPos = 180;
+					if (leftPos < 70) leftPos = 70;
+					
+					tooltip.style.left = leftPos + 'px';
+					tooltip.style.top = (cy + 20) + 'px';
+					tooltip.style.transform = 'translateX(-50%)';
+				}
+				
+				// Show the visible dot
+				const visibleDot = e.target.nextElementSibling;
+				if (visibleDot) visibleDot.style.opacity = '1';
+			}
+		});
+		
+		document.addEventListener('mouseout', (e) => {
+			if (e.target.classList.contains('sparkline-hover-dot')) {
+				const sparklineBox = e.target.closest('.relative');
+				const tooltip = sparklineBox?.querySelector('.sparkline-tooltip');
+				if (tooltip) tooltip.classList.add('hidden');
+				
+				const visibleDot = e.target.nextElementSibling;
+				if (visibleDot) visibleDot.style.opacity = '0';
+			}
+		});
 	}
 	
 	/**
@@ -324,41 +371,178 @@
 			nameElement.textContent = countryName;
 		}
 		
-		// Clear any existing ranking info first
-		const textSection = card.querySelector('.text-center');
-		if (textSection) {
-			// Remove all existing paragraphs and divs after the country name
-			const existingElements = textSection.querySelectorAll('p:not(.country-name), div');
-			existingElements.forEach(el => el.remove());
+		// Update federation name
+		const fedElement = card.querySelector('.federation-name');
+		if (fedElement) {
+			fedElement.textContent = ranking?.confederationName || '';
 		}
 		
-		// Add ranking info if available
-		let rankingHtml = '<p class="text-gray-500 text-sm mt-2 font-medium">No ranking data available</p>';
+		// Build card body content
+		const cardBody = card.querySelector('.card-body');
+		if (!cardBody) return;
+		
+		let bodyHtml = '<p class="text-gray-500 text-sm">No ranking data available</p>';
 		if (ranking) {
-			const updateDate = new Date().toLocaleDateString('en-US', { 
-				year: 'numeric', 
-				month: 'short', 
-				day: 'numeric' 
-			});
-			rankingHtml = `
-				<p class="text-gray-500 text-sm mt-2 font-medium">FIVB World Ranking</p>
-				<div class="mt-3 space-y-2">
-					<p class="text-2xl font-bold text-gray-900">#${ranking.rank}</p>
-					<p class="text-md text-gray-700"><span class="font-semibold">${ranking.points.toFixed(2)}</span> points</p>
+			const matchHistoryHtml = generateMatchHistory(ranking.pointsProgression);
+			const sparklineHtml = generateSparkline(ranking.pointsProgression);
+			
+			bodyHtml = `
+				<div class="flex items-center justify-between mb-3">
+					<div>
+						<p class="text-xs text-gray-400 uppercase">World Rank</p>
+						<p class="text-2xl font-bold text-gray-900">#${ranking.rank}</p>
+					</div>
+					<div class="text-right">
+						<p class="text-xs text-gray-400 uppercase">Points</p>
+						<p class="text-xl font-semibold text-gray-700">${ranking.points.toFixed(2)}</p>
+					</div>
 				</div>
-				<p class="text-xs text-gray-400 mt-3">Ranking as of: ${updateDate}</p>
+				${matchHistoryHtml}
+				${sparklineHtml}
 			`;
 		}
 		
-		// Add new ranking info
-		if (textSection) {
-			textSection.insertAdjacentHTML('beforeend', rankingHtml);
-		}
+		cardBody.innerHTML = bodyHtml;
 		
 		// Show card
 		card.classList.add('show');
 	}
 	
+	/**
+	 * Generate SVG sparkline for points progression
+	 * @param {Array} progression - Array of {date, points, increment} objects
+	 * @returns {string} HTML string with SVG sparkline
+	 */
+	function generateSparkline(progression) {
+		if (!progression || progression.length < 2) {
+			return '';
+		}
+		
+		// Extract points values
+		const points = progression.map(p => p.points);
+		const minPts = Math.min(...points);
+		const maxPts = Math.max(...points);
+		const range = maxPts - minPts || 1;
+		
+		// Fixed dimensions for the sparkline
+		const width = 260;
+		const height = 50;
+		const padding = 6;
+		
+		// Calculate path coordinates
+		const chartWidth = width - padding * 2;
+		const chartHeight = height - padding * 2;
+		const stepX = chartWidth / (points.length - 1);
+		
+		const pathPoints = points.map((pt, i) => {
+			const x = padding + i * stepX;
+			const y = padding + chartHeight - ((pt - minPts) / range) * chartHeight;
+			return { x, y, pt };
+		});
+		
+		// Create line path
+		const linePath = pathPoints.map((p, i) => 
+			(i === 0 ? 'M' : 'L') + `${p.x.toFixed(1)},${p.y.toFixed(1)}`
+		).join(' ');
+		
+		// Area fill
+		const areaPath = linePath + 
+			` L${pathPoints[pathPoints.length - 1].x.toFixed(1)},${height - padding}` +
+			` L${padding},${height - padding} Z`;
+		
+		// Trend color
+		const startPt = points[0];
+		const endPt = points[points.length - 1];
+		const isPositive = endPt >= startPt;
+		const lineColor = isPositive ? '#10b981' : '#ef4444';
+		const areaColor = isPositive ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)';
+		
+		// Change text
+		const change = endPt - startPt;
+		const changeSign = change >= 0 ? '+' : '';
+		const changeText = `${changeSign}${change.toFixed(1)}`;
+		
+		// Create hover dots for each point
+		const hoverDots = pathPoints.map((p, i) => {
+			const date = progression[i].date ? new Date(progression[i].date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+			return `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="6" fill="transparent" class="sparkline-hover-dot" data-pts="${p.pt.toFixed(2)}" data-date="${date}" style="cursor: pointer;"/>
+			<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3" fill="${lineColor}" opacity="0" class="sparkline-dot"/>`;
+		}).join('');
+		
+		const lastDot = pathPoints[pathPoints.length - 1];
+		
+		return `
+			<div class="mt-3 bg-gray-100 rounded-lg border border-gray-200 overflow-visible relative">
+				<div class="flex items-center justify-between px-3 py-2 bg-gray-50 border-b border-gray-200">
+					<span class="text-xs text-gray-600 font-medium">Points Trend</span>
+					<span class="sparkline-value text-xs font-bold" style="color: ${lineColor}">${changeText} pts</span>
+				</div>
+				<div class="p-2 bg-white rounded-b-lg" style="height: 60px;">
+					<svg width="${width}" height="${height}" style="display: block; max-width: 100%;" class="sparkline-chart">
+						<path d="${areaPath}" fill="${areaColor}" />
+						<path d="${linePath}" fill="none" stroke="${lineColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+						<circle cx="${lastDot.x.toFixed(1)}" cy="${lastDot.y.toFixed(1)}" r="3" fill="${lineColor}"/>
+						${hoverDots}
+					</svg>
+				</div>
+				<div class="sparkline-tooltip hidden absolute bg-gray-900 text-white text-xs px-2 py-1 rounded shadow-lg z-50 whitespace-nowrap" style="pointer-events: none;"></div>
+			</div>
+		`;
+	}
+
+	/**
+	 * Generate match history list
+	 * @param {Array} progression - Array of {date, points, increment, opponent, result, event, score} objects
+	 * @returns {string} HTML string with match history
+	 */
+	function generateMatchHistory(progression) {
+		if (!progression || progression.length === 0) {
+			return '';
+		}
+		
+		// Get last 5 matches (most recent first)
+		const recentMatches = [...progression].reverse().slice(0, 5);
+		
+		const matchItems = recentMatches.map(match => {
+			const isWin = match.result === 'W';
+			const resultBg = isWin ? 'bg-green-500 text-white' : 'bg-red-500 text-white';
+			const resultText = isWin ? 'W' : 'L';
+			
+			// Opponent name
+			const opponent = match.opponent || 'Unknown';
+			
+			// Score display (sets won - sets lost)
+			const score = match.score || '';
+			const [setsWon, setsLost] = score.split('-');
+			
+			return `
+				<div class="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+					<div class="flex items-center gap-2 flex-1 min-w-0">
+						<span class="text-xs text-gray-400">vs</span>
+						<span class="text-sm text-gray-800 font-medium truncate">${opponent}</span>
+					</div>
+					<div class="flex items-center gap-2 shrink-0">
+						<div class="text-center">
+							<span class="text-sm font-bold text-gray-800">${setsWon || '-'}</span>
+							<span class="text-xs text-gray-400 mx-0.5">:</span>
+							<span class="text-sm font-bold text-gray-500">${setsLost || '-'}</span>
+						</div>
+						<span class="text-xs font-bold w-6 h-6 rounded flex items-center justify-center ${resultBg}">${resultText}</span>
+					</div>
+				</div>
+			`;
+		}).join('');
+		
+		return `
+			<div class="match-history">
+				<p class="text-xs text-gray-400 uppercase tracking-wider mb-2">Recent Matches</p>
+				<div class="bg-gray-50 rounded-lg px-3 py-1">
+					${matchItems}
+				</div>
+			</div>
+		`;
+	}
+
 	/**
 	 * Hide country card
 	 */
@@ -368,16 +552,16 @@
 			card.classList.remove('show');
 		}
 	}
-	
+
 	/**
 	 * Show medals for selected country
 	 */
 	function showMedals(countryId) {
 		const medalsCard = document.querySelector('.medals-card');
 		if (!medalsCard) return;
-		
+
 		const countryData = medalsData[countryId];
-		
+
 		if (!countryData) {
 			// No medal data available
 			medalsCard.innerHTML = `
