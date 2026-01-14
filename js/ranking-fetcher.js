@@ -120,6 +120,7 @@ const RankingFetcher = (function() {
 					return {
 						rank: index + 1,
 						federationName: team.federationName,
+						federationCode: team.federationCode || '',
 						countryName: team.federationName,
 						points: parseFloat(team.decimalPoints),
 						iso3: federationToIso3[team.federationName] || null,
@@ -301,58 +302,99 @@ const RankingFetcher = (function() {
 		return rankings.map(r => ({
 			rank: r.rank,
 			teamName: r.federationName,
-			teamCode: r.countryCode || getCountryCode(r.federationName),
+			teamCode: iocToIso2(r.federationCode) || getCountryCode(r.federationName),
 			wrs: r.points
 		}));
 	}
 	
 	/**
-	 * Get country code from name (for flags)
+	 * Convert IOC 3-letter code to ISO 2-letter code (for flags)
+	 */
+	function iocToIso2(ioc) {
+		if (!ioc) return '';
+		const map = {
+			// Americas
+			'USA': 'us', 'BRA': 'br', 'ARG': 'ar', 'CAN': 'ca', 'MEX': 'mx',
+			'COL': 'co', 'CHI': 'cl', 'VEN': 've', 'ECU': 'ec', 'URU': 'uy',
+			'PAR': 'py', 'BOL': 'bo', 'PER': 'pe', 'CUB': 'cu', 'PUR': 'pr',
+			'DOM': 'do', 'TTO': 'tt', 'JAM': 'jm', 'BAR': 'bb', 'BER': 'bm',
+			'LCA': 'lc', 'ANT': 'ag', 'NCA': 'ni', 'CRC': 'cr', 'PAN': 'pa',
+			'GUA': 'gt', 'HON': 'hn', 'ESA': 'sv', 'HAI': 'ht', 'GRN': 'gd',
+			'SKN': 'kn', 'VIN': 'vc', 'DMA': 'dm', 'BIZ': 'bz', 'GUY': 'gy',
+			'SUR': 'sr', 'ARU': 'aw', 'CAY': 'ky', 'IVB': 'vg', 'ISV': 'vi',
+			'AHO': 'cw', 'SMR': 'sm', 'BAH': 'bs',
+			// Europe
+			'POL': 'pl', 'ITA': 'it', 'FRA': 'fr', 'GER': 'de', 'TUR': 'tr',
+			'SRB': 'rs', 'NED': 'nl', 'BEL': 'be', 'BUL': 'bg', 'CZE': 'cz',
+			'SLO': 'si', 'UKR': 'ua', 'FIN': 'fi', 'GRE': 'gr', 'ESP': 'es',
+			'POR': 'pt', 'CRO': 'hr', 'SWE': 'se', 'NOR': 'no', 'ROU': 'ro',
+			'RUS': 'ru', 'AUT': 'at', 'SUI': 'ch', 'HUN': 'hu', 'SVK': 'sk',
+			'DEN': 'dk', 'IRL': 'ie', 'GBR': 'gb', 'SCO': 'gb-sct', 'WAL': 'gb-wls',
+			'ENG': 'gb-eng', 'NIR': 'gb-nir', 'AZE': 'az', 'GEO': 'ge', 'ARM': 'am',
+			'BLR': 'by', 'MDA': 'md', 'LAT': 'lv', 'LTU': 'lt', 'EST': 'ee',
+			'ISL': 'is', 'LUX': 'lu', 'MLT': 'mt', 'CYP': 'cy', 'MNE': 'me',
+			'BIH': 'ba', 'MKD': 'mk', 'ALB': 'al', 'KOS': 'xk', 'AND': 'ad',
+			'LIE': 'li', 'MON': 'mc', 'FAR': 'fo',
+			// Asia
+			'JPN': 'jp', 'CHN': 'cn', 'THA': 'th', 'KOR': 'kr', 'IND': 'in',
+			'PAK': 'pk', 'VIE': 'vn', 'INA': 'id', 'MAS': 'my', 'PHI': 'ph',
+			'SIN': 'sg', 'TPE': 'tw', 'HKG': 'hk', 'KAZ': 'kz', 'UZB': 'uz',
+			'QAT': 'qa', 'KUW': 'kw', 'UAE': 'ae', 'KSA': 'sa', 'BRN': 'bh',
+			'OMA': 'om', 'IRQ': 'iq', 'SYR': 'sy', 'JOR': 'jo', 'LBN': 'lb',
+			'IRI': 'ir', 'PRK': 'kp', 'MGL': 'mn', 'BAN': 'bd', 'SRI': 'lk',
+			'NEP': 'np', 'MYA': 'mm', 'LAO': 'la', 'CAM': 'kh', 'TLS': 'tl',
+			'MAC': 'mo', 'MDV': 'mv', 'BRU': 'bn', 'AFG': 'af', 'TJK': 'tj',
+			'TKM': 'tm', 'KGZ': 'kg', 'YEM': 'ye', 'PLE': 'ps',
+			// Africa
+			'EGY': 'eg', 'MAR': 'ma', 'ALG': 'dz', 'TUN': 'tn', 'LBA': 'ly',
+			'NGR': 'ng', 'RSA': 'za', 'KEN': 'ke', 'CMR': 'cm', 'GHA': 'gh',
+			'SEN': 'sn', 'CIV': 'ci', 'COD': 'cd', 'RWA': 'rw', 'UGA': 'ug',
+			'TAN': 'tz', 'ETH': 'et', 'SUD': 'sd', 'ZIM': 'zw', 'ZAM': 'zm',
+			'MOZ': 'mz', 'ANG': 'ao', 'BOT': 'bw', 'NAM': 'na', 'MAD': 'mg',
+			'MRI': 'mu', 'SEY': 'sc', 'GAB': 'ga', 'CGO': 'cg', 'BEN': 'bj',
+			'BUR': 'bf', 'MLI': 'ml', 'NIG': 'ne', 'TOG': 'tg', 'GAM': 'gm',
+			'GUI': 'gn', 'LBR': 'lr', 'SLE': 'sl', 'CAF': 'cf', 'CHA': 'td',
+			'ERI': 'er', 'DJI': 'dj', 'SOM': 'so', 'SSD': 'ss', 'MTN': 'mr',
+			'CPV': 'cv', 'STP': 'st', 'COM': 'km', 'GNQ': 'gq', 'LES': 'ls',
+			'SWZ': 'sz', 'MWI': 'mw', 'GNB': 'gw',
+			// Oceania
+			'AUS': 'au', 'NZL': 'nz', 'FIJ': 'fj', 'PNG': 'pg', 'SAM': 'ws',
+			'TON': 'to', 'COK': 'ck', 'VAN': 'vu', 'SOL': 'sb', 'TUV': 'tv',
+			'PLW': 'pw', 'FSM': 'fm', 'MHL': 'mh', 'KIR': 'ki', 'NRU': 'nr',
+			'ASA': 'as', 'GUM': 'gu', 'NCL': 'nc', 'TAH': 'pf'
+		};
+		return map[ioc.toUpperCase()] || '';
+	}
+	
+	/**
+	 * Get country code from name (for flags) - fallback
 	 */
 	function getCountryCode(name) {
+		const n = name.toLowerCase().trim();
 		const codes = {
-			'united states': 'us',
-			'brazil': 'br',
-			'poland': 'pl',
-			'italy': 'it',
-			'japan': 'jp',
-			'china': 'cn',
-			'france': 'fr',
-			'germany': 'de',
-			'turkey': 'tr',
-			'serbia': 'rs',
-			'netherlands': 'nl',
-			'canada': 'ca',
-			'argentina': 'ar',
-			'dominican republic': 'do',
-			'thailand': 'th',
-			'south korea': 'kr',
-			'cuba': 'cu',
-			'puerto rico': 'pr',
-			'belgium': 'be',
-			'bulgaria': 'bg',
-			'czech republic': 'cz',
-			'slovenia': 'si',
-			'ukraine': 'ua',
-			'finland': 'fi',
-			'mexico': 'mx',
-			'kenya': 'ke',
-			'egypt': 'eg',
-			'cameroon': 'cm',
-			'tunisia': 'tn',
-			'iran': 'ir',
-			'australia': 'au',
-			'peru': 'pe',
-			'greece': 'gr',
-			'spain': 'es',
-			'portugal': 'pt',
-			'croatia': 'hr',
-			'sweden': 'se',
-			'norway': 'no',
-			'romania': 'ro',
-			'russia': 'ru'
+			'united states': 'us', 'brazil': 'br', 'poland': 'pl', 'italy': 'it',
+			'japan': 'jp', 'china': 'cn', 'france': 'fr', 'germany': 'de',
+			'turkey': 'tr', 'türkiye': 'tr', 'serbia': 'rs', 'netherlands': 'nl',
+			'canada': 'ca', 'argentina': 'ar', 'dominican republic': 'do',
+			'thailand': 'th', 'south korea': 'kr', 'korea': 'kr', 'cuba': 'cu',
+			'puerto rico': 'pr', 'belgium': 'be', 'bulgaria': 'bg',
+			'czech republic': 'cz', 'czechia': 'cz', 'slovenia': 'si',
+			'ukraine': 'ua', 'finland': 'fi', 'mexico': 'mx', 'kenya': 'ke',
+			'egypt': 'eg', 'cameroon': 'cm', 'tunisia': 'tn', 'iran': 'ir',
+			'australia': 'au', 'peru': 'pe', 'greece': 'gr', 'spain': 'es',
+			'portugal': 'pt', 'croatia': 'hr', 'sweden': 'se', 'norway': 'no',
+			'romania': 'ro', 'russia': 'ru',
+			// Caribbean & Central America
+			'jamaica': 'jm', 'trinidad and tobago': 'tt', 'barbados': 'bb',
+			'bermuda': 'bm', 'saint lucia': 'lc', 'st. lucia': 'lc',
+			'antigua and barbuda': 'ag', 'nicaragua': 'ni', 'costa rica': 'cr',
+			'panama': 'pa', 'guatemala': 'gt', 'honduras': 'hn', 'el salvador': 'sv',
+			'haiti': 'ht', 'grenada': 'gd', 'saint kitts and nevis': 'kn',
+			'saint vincent and the grenadines': 'vc', 'dominica': 'dm',
+			'belize': 'bz', 'guyana': 'gy', 'suriname': 'sr', 'bahamas': 'bs',
+			'san marino': 'sm', 'aruba': 'aw', 'curaçao': 'cw', 'curacao': 'cw'
 		};
-		return codes[name.toLowerCase()] || '';
+		return codes[n] || '';
 	}
 	
 	/**
