@@ -320,6 +320,7 @@
 		const btnLeaderboard = document.getElementById('btnLeaderboard');
 		const closeLeaderboard = document.getElementById('closeLeaderboard');
 		const modal = document.getElementById('leaderboardModal');
+		const searchInput = document.getElementById('leaderboardSearch');
 		
 		if (btnLeaderboard) {
 			btnLeaderboard.addEventListener('click', () => {
@@ -341,6 +342,30 @@
 				}
 			});
 		}
+		
+		// Search functionality
+		if (searchInput) {
+			searchInput.addEventListener('input', (e) => {
+				filterLeaderboard(e.target.value);
+			});
+		}
+	}
+	
+	/**
+	 * Filter leaderboard by search term
+	 */
+	function filterLeaderboard(searchTerm) {
+		const items = document.querySelectorAll('.leaderboard-item');
+		const term = searchTerm.toLowerCase().trim();
+		
+		items.forEach(item => {
+			const country = item.getAttribute('data-country')?.toLowerCase() || '';
+			if (term === '' || country.includes(term)) {
+				item.style.display = 'flex';
+			} else {
+				item.style.display = 'none';
+			}
+		});
 	}
 	
 	/**
@@ -350,8 +375,14 @@
 		const modal = document.getElementById('leaderboardModal');
 		const content = document.getElementById('leaderboardContent');
 		const title = document.getElementById('leaderboardTitle');
+		const searchInput = document.getElementById('leaderboardSearch');
 		
 		if (!modal || !content) return;
+		
+		// Clear search input
+		if (searchInput) {
+			searchInput.value = '';
+		}
 		
 		// Update title based on gender
 		if (title) {

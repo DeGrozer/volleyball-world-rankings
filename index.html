@@ -81,7 +81,10 @@
 				<h2 id="leaderboardTitle" class="text-base font-semibold text-white">World Rankings</h2>
 				<button id="closeLeaderboard" class="text-gray-400 hover:text-white text-xl leading-none w-6 h-6 flex items-center justify-center rounded hover:bg-gray-700/50 transition-colors">&times;</button>
 			</div>
-			<div id="leaderboardContent" class="overflow-y-auto max-h-[calc(70vh-56px)]">
+			<div class="px-5 py-3 border-b border-gray-700/50">
+				<input type="text" id="leaderboardSearch" placeholder="Search country..." class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-gray-500 transition-colors">
+			</div>
+			<div id="leaderboardContent" class="overflow-y-auto max-h-[calc(70vh-110px)]">
 				<div class="text-center text-gray-500 py-8 text-sm">Loading...</div>
 			</div>
 		</div>
